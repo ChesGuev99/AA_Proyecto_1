@@ -1,0 +1,7 @@
+Bitacora del Proyecto
+
+09/04:
+    Nos reunimos para analizar el proyecto y distintos aproaches del mismo.
+    Se inicia la investigacion profunda de los distintos algoritmos. Repaso de los estandares de codigo.
+    Queda como pendiente la lectura de gitflow y workflow y seguir el analizis de los algoritmos.
+
