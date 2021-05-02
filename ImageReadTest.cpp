@@ -153,7 +153,7 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
 
 
     // key: RGB, value: counter of apparitions
-    unordered_map<int, int> image1ColorMap;
+    unordered_map<int, tuple<vector<Pixel*>,vector<Pixel*>>> image1ColorMap;
     unordered_map<string, int> image2ColorMap;
 
     // string 1: RGB String, String 2: x,y String
@@ -166,7 +166,8 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
 
     createDiagons(ceil(image1Width/sectionWidth),diagonalesImg1);
 
-    int fixedJ = 0;
+    int fixedJ = 0, diagonPosition, rgb;
+
     for (int i = 0; i < image1Width; i++, fixedJ++) {
         if (fixedJ >= sectionWidth) {
             fixedJ = 0;
@@ -174,17 +175,24 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
             diagonalesImg1.insert(diagonalesImg1.begin(), new Diagonal());
 
         }
-        for (int j = fixedJ; j < image1Height; j += sectionWidth) {
+        diagonPosition = 0;
+        for (int j = fixedJ; j < image1Height; j += sectionWidth, diagonPosition++) {
             //cout << "x, y = " << i << "," <<j<< endl;
             int temporalIndex = RGBA * (j * image1Width + i);
 
             int r = (static_cast<int>(image1[temporalIndex + 0]));
             int g = (static_cast<int>(image1[temporalIndex + 1]));
             int b = (static_cast<int>(image1[temporalIndex + 2]));
-            int rgb = ((r&0x0ff)<<16)|((g&0x0ff)<<8)|(b&0x0ff);
+            rgb = ((r&0x0ff)<<16)|((g&0x0ff)<<8)|(b&0x0ff);
 
             Pixel *newPix = new Pixel();
-            //newPix;
+            // TODO: addPixel(pixel*, diagonal*)
+
+            if(image1ColorMap.find(rgb) == image1ColorMap.end()){
+                tuple<vector<Pixel*>,vector<Pixel*>> newKey({},{});
+                image1ColorMap[rgb] = newKey;
+            }
+            get<0>(image1ColorMap[rgb]).push_back(newPix);
 
 
             // Rgb value in the form of "255-255-255", can be changed to a different representation, for now it will be a string.
@@ -202,6 +210,51 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
         }
 
     }
+    vector<Diagonal*> tempDiagonals2;
+    createDiagons(ceil(image1Width/sectionWidth),tempDiagonals2);
+
+    for (int i = 0; i < image1Width; i++, fixedJ++) {
+        if (fixedJ >= sectionWidth) {
+            fixedJ = 0;
+
+            tempDiagonals2.insert(tempDiagonals2.begin(), new Diagonal());
+
+        }
+        diagonPosition = 0;
+        for (int j = fixedJ; j < image1Height; j += sectionWidth, diagonPosition++) {
+            //cout << "x, y = " << i << "," <<j<< endl;
+            int temporalIndex = RGBA * (j * image1Width + i);
+
+            int r = (static_cast<int>(image2[temporalIndex + 0]));
+            int g = (static_cast<int>(image2[temporalIndex + 1]));
+            int b = (static_cast<int>(image2[temporalIndex + 2]));
+            rgb = ((r&0x0ff)<<16)|((g&0x0ff)<<8)|(b&0x0ff);
+
+            if(image1ColorMap.find(rgb) == image1ColorMap.end()){
+                diagonalesImg2.push_back(new Diagonal());
+                swap(tempDiagonals2.at(diagonPosition), tempDiagonals2.back());
+            }
+            else{
+                Pixel *newPix = new Pixel();
+                // TODO: addPixel
+            }
+        }
+    }
+    for(Diagonal *diagonal: tempDiagonals2){
+        if(diagonal->Size >= sectionWidth/2){
+            diagonalesImg2.push_back(diagonal);
+            Pixel *pixel = diagonal->First;
+            while(pixel != NULL){
+                rgb = pixel->colorRGB;
+                get<1>(image1ColorMap[rgb]).push_back(pixel);
+                pixel = pixel-> next;
+            }
+        }
+    }
+
+    // TODO: CheckDiagons
+
+
     cout << "vectores imagenes terminado, largo de cada vector=" << image1RgbValues.size() << endl;
     cin >>a;
 
