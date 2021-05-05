@@ -22,18 +22,24 @@ extern "C" {
 struct Pixel{
     // Anterior
     // Siguiente
-    // Color
+    int colorRGB;
+    Pixel *inicioDiagonal;
+    int posDiagonal;
     // x,y
 };
 
-struct Diagonal{
+/*struct Diagonal{
     Pixel *First;
     Pixel *Last;
     int Size;
-};
+};*/
 
-vector<Diagonal*> diagonalesImg1;
-vector<Diagonal*> diagonalesImg2;
+vector<vector<Pixel*>> diagonalesImg1;
+vector<vector<Pixel*>> diagonalesImg2;
+
+void addPixel(Pixel *pixel, vector<Pixel*>){
+    pixel->
+}
 
 //Original code of image and pixel management: https://www.cplusplus.com/forum/beginner/267364/
 
@@ -104,13 +110,9 @@ void comparisson(const vector<tuple<string,string>>& image1RgbValues, const vect
     cout << "Answer: " << subImagesFromImage1FoundInImage2;
 }
 
-void createDiagons(int cuantity, vector<Diagonal*> diagonaList){
+void createDiagons(int cuantity, vector<vector<Pixel*>> diagonaList){
     for (int diagonal = 0; diagonal <= cuantity; diagonal++){
-        Diagonal *newDiagonal = new Diagonal();
-        newDiagonal->First = nullptr;
-        newDiagonal->Last = nullptr;
-        newDiagonal->Size = 0;
-        diagonaList.push_back(newDiagonal);
+        diagonaList.push_back({});
     }
 }
 
@@ -172,7 +174,7 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
         if (fixedJ >= sectionWidth) {
             fixedJ = 0;
 
-            diagonalesImg1.insert(diagonalesImg1.begin(), new Diagonal());
+            diagonalesImg1.insert(diagonalesImg1.begin(), {});
 
         }
         diagonPosition = 0;
@@ -210,14 +212,14 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
         }
 
     }
-    vector<Diagonal*> tempDiagonals2;
+    vector<vector<Pixel*>> tempDiagonals2;
     createDiagons(ceil(image1Width/sectionWidth),tempDiagonals2);
 
     for (int i = 0; i < image1Width; i++, fixedJ++) {
         if (fixedJ >= sectionWidth) {
             fixedJ = 0;
 
-            tempDiagonals2.insert(tempDiagonals2.begin(), new Diagonal());
+            tempDiagonals2.insert(tempDiagonals2.begin(), {});
 
         }
         diagonPosition = 0;
@@ -231,24 +233,35 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
             rgb = ((r&0x0ff)<<16)|((g&0x0ff)<<8)|(b&0x0ff);
 
             if(image1ColorMap.find(rgb) == image1ColorMap.end()){
-                diagonalesImg2.push_back(new Diagonal());
+                tempDiagonals2.push_back({});
                 swap(tempDiagonals2.at(diagonPosition), tempDiagonals2.back());
             }
             else{
                 Pixel *newPix = new Pixel();
+                newPix->colorRGB = rgb;
+                tempDiagonals2[diagonPosition].push_back(newPix);
                 // TODO: addPixel
             }
         }
     }
-    for(Diagonal *diagonal: tempDiagonals2){
-        if(diagonal->Size >= sectionWidth/2){
+    for (int i = 0; i < tempDiagonals2.size(); ++i) {
+        vector<Pixel*> diagonal = tempDiagonals2[i];
+        if(diagonal.size() >= sectionWidth/2){
             diagonalesImg2.push_back(diagonal);
-            Pixel *pixel = diagonal->First;
-            while(pixel != NULL){
+            for (Pixel *pixel: diagonal) {
                 rgb = pixel->colorRGB;
                 get<1>(image1ColorMap[rgb]).push_back(pixel);
-                pixel = pixel-> next;
             }
+        }
+        else {
+            for (Pixel *pixel: diagonal) {
+                vector<Pixel*> list = get<1>(image1ColorMap[pixel->colorRGB]);
+                remove(list.begin(),list.end(),pixel);
+                delete pixel;
+            }
+            tempDiagonals2.erase(tempDiagonals2.begin()+i);
+
+            //TODO: Delete Diagonal
         }
     }
 
