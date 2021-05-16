@@ -6,7 +6,6 @@
 #include <chrono>
 #include <algorithm>
 #include <math.h>
-#include <bits/stdc++.h>
 
 using namespace std;
 
@@ -39,11 +38,6 @@ struct Pixel{
     }
 };
 
-/*struct Diagonal{
-    Pixel *First;
-    Pixel *Last;
-    int Size;
-};*/
 
 vector<vector<Pixel*>> diagonalesImg1;
 vector<vector<Pixel*>> diagonalesImg2;
@@ -115,12 +109,6 @@ void comparisson(const vector<tuple<string,string>>& image1RgbValues, const vect
     cout << "Answer: " << subImagesFromImage1FoundInImage2;
 }
 
-void createDiagons(int cuantity, vector<vector<Pixel*>> *diagonaList){
-    for (int diagonal = 0; diagonal <= cuantity; diagonal++){
-        diagonalesImg1.push_back({});
-    }
-    cout << "creo diagonales";
-}
 
 vector<unsigned char> image2;
 int image2Width, image2Height;
@@ -130,8 +118,10 @@ unordered_map<int, tuple<vector<Pixel*>,vector<Pixel*>>> image1ColorMap;
 const size_t RGBA = 4;
 
 char a;
+int sectionWidth;
 
-void getImagesPixels(const string& image1Filename, const string& image2Filename, int sectionWidth) {
+
+void getImagesPixels(const string& image1Filename, const string& image2Filename) {
 
     vector<unsigned char> image1;
     int image1Width, image1Height;
@@ -173,7 +163,12 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
     cout << "lectura imagenes terminada, diagonales que deberia crear " << ceil(image1Width/sectionWidth) << endl;
     cin >> a;
 
-    createDiagons(ceil(image1Width/sectionWidth),&diagonalesImg1);
+    int cuantity = ceil(image1Width/sectionWidth);
+    for (int diagonal = 0; diagonal <= cuantity; diagonal++){
+        diagonalesImg1.push_back({});
+    }
+    cout << "creo diagonales";
+
 
     int fixedJ = 0, rgb;
 
@@ -227,10 +222,18 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename,
     pointsImg2(image1);
 }
 
+void compareDiagons(Pixel *pixImg1, Pixel *pixImg2){
+    int ubic = sectionWidth/2 * -3;
+    int pos2Find = pixImg1->posDiagonal;
+    vector<Pixel *> *diagon = pixImg1->diagonal;
+    Pixel *pix = diagon->at(pos2Find+ubic);
+
+}
+
 bool cmp(pair<int, int>& a,
          pair<int, int>& b)
 {
-    return a.second < b.second;
+    return a.second > b.second;
 }
 
 unordered_map<int, int> colorAparitions;
@@ -254,7 +257,7 @@ void pointsImg2(vector<unsigned char> image1){
                 Pixel *newPix = new Pixel(diagonalesImg2[diagonPos],rgb,j, i);
                 // TODO: getDiagonal(newPix)
                 get<1>(image1ColorMap[rgb]).push_back(newPix);
-                image2RgbValues.push_back(make_tuple((to_string(r)+ "-" +to_string(g)+ "-" +to_string(b)),(to_string(j)+","+to_string(i))));
+                image2RgbValues.push_back(make_tuple((to_string(r)+ "-" +to_string(g)+ "-" +to_string(b)),(to_string(i)+","+to_string(j))));
                 /*cout << "aparicion de color " << (to_string(r)+ "-" +to_string(g)+ "-" +to_string(b))
                                     << "at: " << (to_string(j)+","+to_string(i))<< endl;*/
                 colorAparitions[rgb]++;
@@ -268,10 +271,12 @@ void pointsImg2(vector<unsigned char> image1){
 
     //sort(colorAparitions.begin(), colorAparitions.end(), cmp);
     cout << "encontrados en:" << endl;
-    int color = elems[0].first;
+    int color = elems[elems.size()/2].first;
+    cout << color << "cantidad" << elems[elems.size()/2].second;
+    cin >> a;
     //get<1>(image1ColorMap[color]);
-    for(auto pix : get<1>(image1ColorMap[color])){
-        cout << "color: " <<color << " at x.y  " << get<0>(pix->xy) << "." << get<1>(pix->xy) << endl;
+    for(auto pix : get<1>(image1ColorMap[2304347])){
+        cout << "color: " <<pix->colorRGB << " at i.j  " << get<0>(pix->xy) << "." << get<1>(pix->xy) << endl;
     }
     cout << "vectores imagenes terminado, largo de cada vector=" << image2RgbValues.size() << endl;
     cin >>a;
@@ -340,7 +345,8 @@ int main(){
     //compare();
 
     //sections(25,100,2,5);
-    getImagesPixels("imageSamples/image1.jpg","imageSamples/image2.jpg",192);
+    sectionWidth = 192;
+    getImagesPixels("imageSamples/image1.jpg","imageSamples/image2.jpg");
 
     auto done = chrono::high_resolution_clock::now();
 
