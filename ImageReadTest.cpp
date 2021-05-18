@@ -36,6 +36,15 @@ struct Pixel{
         this->diagonal->push_back(this);
         this->xy = make_tuple(x,y);
     }
+
+    Pixel(vector<Pixel*> diagonal, int pos, int color, int x, int y){
+        this->colorRGB = color;
+        this->posDiagonal = pos;
+        this->diagonal = &diagonal;
+        //this->diagonal->push_back(this);
+        this->xy = make_tuple(x,y);
+    }
+
 };
 
 
@@ -110,23 +119,21 @@ void comparisson(const vector<tuple<string,string>>& image1RgbValues, const vect
 }
 
 
-vector<unsigned char> image2;
-int image2Width, image2Height;
-
 unordered_map<int, tuple<vector<Pixel*>,vector<Pixel*>>> image1ColorMap;
 
 const size_t RGBA = 4;
 
 char a;
-int sectionWidth;
+int sectionWidth, sectionHeight;
 
 
-void getImagesPixels(const string& image1Filename, const string& image2Filename) {
+void getImagesPixels(const string& image1Filename) {
 
     vector<unsigned char> image1;
+
     int image1Width, image1Height;
 
-    bool success = load_image(image1, "imageSamples/image1.jpg", image1Width, image1Height);
+    bool success = load_image(image1, image1Filename, image1Width, image1Height);
     cout << "Height: " << image1Height;
     cout << "  Width: " << image1Width;
     cin >> a;
@@ -136,15 +143,6 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename)
         cout << "Error loading image 1 \n";
         return;
     }
-
-    success = load_image(image2, image2Filename, image2Width, image2Height);
-
-    if (!success)
-    {
-        cout << "Error loading image 2 \n";
-        return;
-    }
-
 
 
     // For each row, get a pixel  every subImageWidth colums
@@ -219,14 +217,31 @@ void getImagesPixels(const string& image1Filename, const string& image2Filename)
         cout << "i.j" << get<0>(pix->xy) << "." << get<1>(pix->xy) << "color:  " << pix->colorRGB << endl;
     }
 
-    pointsImg2(image1);
 }
+
+
 
 void compareDiagons(Pixel *pixImg1, Pixel *pixImg2){
     int ubic = sectionWidth/2 * -3;
+    int cont = 0;
+
     int pos2Find = pixImg1->posDiagonal;
     vector<Pixel *> *diagon = pixImg1->diagonal;
-    Pixel *pix = diagon->at(pos2Find+ubic);
+    int color1 = diagon->at(pos2Find+ubic)->colorRGB;
+
+    //int temporalIndex = RGBA * (get<1>(pixImg2->xy)+ubic * image2Width + get<0>(pixImg2->xy)+ubic);
+    /*int r = (static_cast<int>(image2[temporalIndex + 0]));
+    int g = (static_cast<int>(image2[temporalIndex + 1]));
+    int b = (static_cast<int>(image2[temporalIndex + 2]));
+
+    int color2 = ((r&0x0ff)<<16)|((g&0x0ff)<<8)|(b&0x0ff);
+
+    if(color1 == color2){}*/
+
+
+
+
+
 
 }
 
@@ -238,7 +253,118 @@ bool cmp(pair<int, int>& a,
 
 unordered_map<int, int> colorAparitions;
 
-void pointsImg2(vector<unsigned char> image1){
+vector<unsigned char> image2;
+
+void getDiagons(Pixel *pix, int &image2Width, int &image2Height){
+    //REVISAR !!!
+    vector<Pixel*> *diagon = (pix->diagonal);
+    /*cout << "Diagonal antes" << endl;
+    for (auto dig : *diagon) {
+        cout << dig->colorRGB << " i.j " << get<0>(dig->xy)<< "." << get<1>(dig->xy) << endl;
+    }*/
+    Pixel *newPix;
+
+    int temporalIndex, x, y;
+    int halfHeight = (sectionHeight/2) ;
+
+
+    /*cout <<"i.j Original:  " << get<0>(pix->xy) << "," << get<1>(pix->xy)<< endl;
+    cout << "Hlaf Height" << halfHeight<< endl;*/
+    for (int i = -1; i >= -4 ; --i) {
+        if(i != -1) {
+            x = get<0>(pix->xy)-halfHeight;
+            y = get<1>(pix->xy)-halfHeight;
+            halfHeight += halfHeight;
+        }
+        else{
+            x = get<0>(pix->xy) - 1;
+            y = get<1>(pix->xy) - 1;
+        }
+
+        if(x >= 0 && y >= 0) {
+            temporalIndex = RGBA * (y * image2Width + x);
+            int r = (static_cast<int>(image2[temporalIndex + 0]));
+            int g = (static_cast<int>(image2[temporalIndex + 1]));
+            int b = (static_cast<int>(image2[temporalIndex + 2]));
+            int rgb = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
+
+            newPix = new Pixel(*diagon,0, rgb, x, y);
+            /*auto it = diagon->begin();
+            diagon->insert(it,newPix);*/
+
+            diagon->push_back(newPix);
+            rotate(diagon->rbegin(), diagon->rbegin() + 1, diagon->rend());
+
+            /*cout << "diagonal luego de insert " << endl;
+            for (auto dig : *diagon) {
+                cout << dig->colorRGB << " i.j " << get<0>(dig->xy)<< "." << get<1>(dig->xy) << endl;
+            }*/
+
+
+        }
+
+    }
+
+
+    halfHeight = (sectionHeight/2) ;
+
+
+    //cout << "Hlaf Height" << halfHeight<< endl;
+    for (int i = -1; i >= -4 ; --i) {
+        if(i != -1) {
+            x = get<0>(pix->xy)+halfHeight;
+            y = get<1>(pix->xy)+halfHeight;
+            halfHeight += halfHeight;
+        }
+        else{
+            x = get<0>(pix->xy) + 1;
+            y = get<1>(pix->xy) + 1;
+        }
+
+        if(x < image2Width and y < image2Height) {
+            temporalIndex = RGBA * (y * image2Width + x);
+            int r = (static_cast<int>(image2[temporalIndex + 0]));
+            int g = (static_cast<int>(image2[temporalIndex + 1]));
+            int b = (static_cast<int>(image2[temporalIndex + 2]));
+            int rgb = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
+
+            newPix = new Pixel(*diagon,0, rgb, x, y);
+            diagon->push_back(newPix);
+
+            /*auto it = diagon->begin()+ diagon->size();
+            diagon->insert(it,newPix);*/
+
+            //diagon->push_back(newPix);
+
+
+            //cout << newPix->colorRGB << " i.j " << get<0>(newPix->xy)<< "." << get<1>(newPix->xy) << endl;
+
+        }
+    }
+
+    /*cout << "Diagonal todos for" << endl;
+    for (auto dig : *diagon) {
+        cout << dig->colorRGB << " i.j " << get<0>(dig->xy)<< "." << get<1>(dig->xy) << endl;
+    }*/
+    *pix->diagonal = *diagon;
+}
+
+void pointsImg2(const string& image2Filename){
+
+    int image2Width, image2Height;
+
+    bool success = load_image(image2, image2Filename, image2Width, image2Height);
+    cout << "Height: " << image2Height;
+    cout << "  Width: " << image2Width;
+    cin >> a;
+
+    if (!success)
+    {
+        cout << "Error loading image 2 \n";
+        return;
+    }
+
+
     vector<tuple<string,string>> image2RgbValues;
     //vector i,j Visitados
     for (int i = 0; i < image2Width; i++) {
@@ -246,24 +372,52 @@ void pointsImg2(vector<unsigned char> image1){
 
             int temporalIndex = RGBA * (j * image2Width + i);
 
-            int r = (static_cast<int>(image1[temporalIndex + 0]));
-            int g = (static_cast<int>(image1[temporalIndex + 1]));
-            int b = (static_cast<int>(image1[temporalIndex + 2]));
+            int r = (static_cast<int>(image2[temporalIndex + 0]));
+            int g = (static_cast<int>(image2[temporalIndex + 1]));
+            int b = (static_cast<int>(image2[temporalIndex + 2]));
             int rgb = ((r&0x0ff)<<16)|((g&0x0ff)<<8)|(b&0x0ff);
 
             if (image1ColorMap.find(rgb) != image1ColorMap.end()) {
-                int diagonPos = diagonalesImg2.size();
-                diagonalesImg2.push_back({});
-                Pixel *newPix = new Pixel(diagonalesImg2[diagonPos],rgb,j, i);
-                // TODO: getDiagonal(newPix)
-                get<1>(image1ColorMap[rgb]).push_back(newPix);
+                vector<Pixel*> newDiag = {};
+                Pixel *newPix = new Pixel(newDiag,rgb,i, j);
+
+                cout << "Diagonal antes crearDiagon"<<newPix->diagonal->size()<<endl;
+
+                getDiagons(newPix,image2Width,image2Height);
+                diagonalesImg2.push_back(*newPix->diagonal);
+                cout << "Tamano de Diagonales2:  " << diagonalesImg2.size() << endl;
+                cout << "Diagonal despues crearDiagon"<<newPix->diagonal->size()<<endl;
+
+                /*for(auto diagonal : diagonalesImg2){
+                    //cout << "\ncolor: " <<pix->colorRGB << " at i.j  " << get<0>(pix->xy) << "." << get<1>(pix->xy) << endl;
+                    for (Pixel *pixel : diagonal) {
+                        cout << pixel->colorRGB << " i.j " << get<0>(pixel->xy)<< "." << get<1>(pixel->xy) << endl;
+                    }
+                }*/
+
+                /*for (Pixel *pixel : *newPix->diagonal) {
+                    cout << pixel->colorRGB << " i.j " << get<0>(pixel->xy)<< "." << get<1>(pixel->xy) << endl;
+                }*/
+                //cout << (get<1>(image1ColorMap[rgb])).size();
+                (get<1>(image1ColorMap[rgb])).push_back(newPix);
                 image2RgbValues.push_back(make_tuple((to_string(r)+ "-" +to_string(g)+ "-" +to_string(b)),(to_string(i)+","+to_string(j))));
                 /*cout << "aparicion de color " << (to_string(r)+ "-" +to_string(g)+ "-" +to_string(b))
-                                    << "at: " << (to_string(j)+","+to_string(i))<< endl;*/
+                                    << "at: " << (to_string(i)+","+to_string(j))<< " color " << rgb << endl;*/
+               /* if(i > 110 and j > 30 ){
+                    if(i < 160 and j < 80 ){
+                        cout << "aparicion de color " << (to_string(r)+ "-" +to_string(g)+ "-" +to_string(b)) << " / " << rgb
+                             << " at: " << (to_string(j)+","+to_string(i))<< endl;
+                    }
+
+                }*/
+
                 colorAparitions[rgb]++;
             }
         }
     }
+    /*for (Pixel *pixel : diagonalesImg2.back()) {
+        cout << pixel->colorRGB << " i.j " << get<0>(pixel->xy)<< "." << get<1>(pixel->xy) << endl;
+    }*/
 
     vector<pair<int, int>> elems(colorAparitions.begin(), colorAparitions.end());
     sort(elems.begin(), elems.end(), cmp);
@@ -275,13 +429,18 @@ void pointsImg2(vector<unsigned char> image1){
     cout << color << "cantidad" << elems[elems.size()/2].second;
     cin >> a;
     //get<1>(image1ColorMap[color]);
-    for(auto pix : get<1>(image1ColorMap[2304347])){
-        cout << "color: " <<pix->colorRGB << " at i.j  " << get<0>(pix->xy) << "." << get<1>(pix->xy) << endl;
+    for(auto pix : get<1>(image1ColorMap[16777215])){
+        cout << "\ncolor: " <<pix->colorRGB << " at i.j  " << get<0>(pix->xy) << "." << get<1>(pix->xy) << endl;
+        for (Pixel *dig : *pix->diagonal) {
+            cout << dig->colorRGB << " i.j " << get<0>(dig->xy)<< "." << get<1>(dig->xy) << endl;
+        }
     }
     cout << "vectores imagenes terminado, largo de cada vector=" << image2RgbValues.size() << endl;
     cin >>a;
 
 }
+
+
 
 void getImagePixels(){
     vector<unsigned char> image1;
@@ -345,8 +504,14 @@ int main(){
     //compare();
 
     //sections(25,100,2,5);
-    sectionWidth = 192;
-    getImagesPixels("imageSamples/image1.jpg","imageSamples/image2.jpg");
+    /*sectionWidth = 192;
+    getImagesPixels("imageSamples/image1_original.jpg");
+    pointsImg2("imageSamples/image4.jpg");*/
+
+    sectionWidth = 40;
+    sectionHeight = 22;
+    getImagesPixels("imageSamples/miniatura1.png");
+    pointsImg2("imageSamples/miniatura2.png");
 
     auto done = chrono::high_resolution_clock::now();
 
