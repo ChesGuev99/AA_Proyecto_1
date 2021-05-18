@@ -33,9 +33,9 @@ struct Pixel{
 //--------------------------------------------------------------FUNCIONES---------------------------------------------------------------
 
 //Funcion que compara los puntos 
-bool compare(*Pixel puntoClave, Pixel puntos2){
+bool compare(Pixel *puntoClave, Pixel puntos2){
 
-	Pixel tempDiagonal = puntoClave->diagonal;
+	vector<Pixel*> tempDiagonal = *puntoClave->diagonal;
 	tempDiagonal = tempDiagonal[pos-50,pos+50];
 	Pixel pixelAux = puntos2;
 
