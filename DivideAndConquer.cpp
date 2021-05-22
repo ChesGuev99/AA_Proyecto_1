@@ -52,15 +52,14 @@ bool compare(Pixel *puntoClave, Pixel puntos2){
 }
 
 //Funcion para el divide y venceras
-void divideAndConquer(Pixel puntosClave, Pixel puntos2, int cont){
-	if (puntos2.lenght > 1)
-		int contador += divideAndConquer(puntoClave, puntos2[0:mitad], contador);
-	    int contador += divideAndConquer(puntoClave, puntos2[mitad:fin], contador);
+void divideAndConquer(Pixel puntoClave, vector<Pixel*> puntos2, int cont){
+	if (puntos2.size() > 1)
+		cont += divideAndConquer(puntoClave, puntos2(puntos2.begin(), puntos2.begin() + puntos2.size()-1/2, cont));
+	    cont += divideAndConquer(puntoClave, puntos2(puntos2.begin() + puntos2.size()-1/2, puntos2.end(), cont), cont);
     else
-    	return compare(puntoClave, puntos2[0]);
+    	return compare(puntoClave, puntos2[0]);  //compare=in progress
 
 }
-
 unordered_map<int, tuple<vector<Pixel*>,vector<Pixel*>>> image1ColorMap;
 
 //Funcion auxiliar para divide and conquer
